@@ -131,7 +131,7 @@ Document exact commands, API endpoints, configuration options, and supported ope
 ### Get RubixDB for Windows
 
 <a href="WINDOWS_DOWNLOAD_URL">
-  <img src="https://img.shields.io/badge/Download-RubixDB%20for%20Windows-111111?style=for-the-badge&logo=windows&logoColor=white" alt="Download RubixDB for Windows"/>
+  <img src="https://github.com/Rubix-Labz/rubiXDb/tree/main/windows" alt="Download RubixDB for Windows"/>
 </a>
 
 </div>
