@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RUBIXDB — Architecture, Engineering &amp; Technical Reference</title>
+<style>
+:root{--ink:#20252b;--muted:#5d6873;--accent:#176b70;--line:#d8dee3;--paper:#fff;--soft:#f4f7f8}
+*{box-sizing:border-box}body{margin:0;background:#eef1f3;color:var(--ink);font:16px/1.72 Georgia,"Times New Roman",serif}
+main{max-width:940px;margin:32px auto;background:var(--paper);padding:64px 78px;box-shadow:0 8px 40px #1d2b3614}
+.cover{min-height:340px;border-bottom:3px solid var(--accent);margin-bottom:48px;padding:70px 0 42px}
+.kicker{font:700 12px/1.4 Arial,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:var(--accent)}
+.cover h1{font:800 54px/1 Arial,sans-serif;letter-spacing:.08em;margin:22px 0 16px}
+.cover .subtitle{font:22px/1.4 Georgia,serif;color:var(--muted);max-width:520px}
+.cover .author{margin-top:54px;font:700 14px Arial,sans-serif;letter-spacing:.1em;text-transform:uppercase}
+h1,h2,h3{font-family:Arial,sans-serif;line-height:1.25;color:#182d34;break-after:avoid}
+h1{font-size:32px;margin-top:54px;border-bottom:1px solid var(--line);padding-bottom:14px}
+h2{font-size:23px;margin-top:38px}h3{font-size:17px;margin-top:28px;color:var(--accent)}
+p{margin:0 0 15px}strong{color:#162c32}a{color:var(--accent)}
+code{font: .88em Consolas,"Liberation Mono",monospace;background:#f1f4f5;padding:2px 4px;border-radius:3px}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#17252d;color:#e9f0f2;padding:20px 22px;border-radius:5px;font:13px/1.55 Consolas,"Liberation Mono",monospace;page-break-inside:avoid}
+.table-wrap{overflow-x:auto;margin:22px 0 28px}table{width:100%;border-collapse:collapse;font:14px/1.5 Arial,sans-serif}th{background:#203940;color:white;text-align:left}th,td{border:1px solid var(--line);padding:9px 11px;vertical-align:top}tr:nth-child(even) td{background:#f7f9fa}
+hr{border:0;border-top:1px solid var(--line);margin:36px 0}.list-item{margin:4px 0 7px 16px}blockquote{margin:20px 0;padding:12px 20px;border-left:3px solid var(--accent);background:var(--soft);color:var(--muted)}
+@media(max-width:700px){main{margin:0;padding:28px 22px}.cover h1{font-size:42px}.cover{padding-top:40px}}
+@media print{body{background:white}main{margin:0;box-shadow:none;max-width:none;padding:22mm}h1{page-break-before:always}h1:first-of-type{page-break-before:auto}}
+</style></head><body><main>
+<section class="cover"><div class="kicker">Engineering Monograph · First Source-Grounded Edition</div>
+<h1>RUBIXDB</h1><div class="subtitle">Architecture, Engineering &amp; Technical Reference</div>
+<div class="author">Manik</div><p style="margin-top:40px;color:#5d6873;font:12px Arial,sans-serif">Software revision covered: 5e8ab125dabf1b77b82f687b88aaf194cf179e84<br>Observed publication date: 20 October 2026</p></section>
+<h1>RUBIXDB</h1>
+<h2>Architecture, Engineering &amp; Technical Reference</h2>
+<h3>Manik</h3>
+<p><strong>First source-grounded edition</strong></p>
+<p>Software revision covered: <code>5e8ab125dabf1b77b82f687b88aaf194cf179e84</code></p>
+<p>Observed publication date: 2026-10-20</p>
+<hr>
+<h2>Copyright and software-license note</h2>
+<p>Copyright © 2026 Manik for this book manuscript and its original editorial presentation.</p>
+<p>This book is documentation, not a grant of rights to the RubixDB software. The repository revision covered by this edition did not contain a root <code>LICENSE</code>, <code>COPYING</code>, or <code>NOTICE</code> file in the inspected root inventory. Package metadata for the Python client declares <code>Proprietary</code>, while the Node package declares <code>UNLICENSED</code>. Readers and redistributors must therefore consult the repository owner before treating the software as open source or redistributing either the software or this book. No publisher, ISBN, trademark registration, institutional affiliation, or external legal status is asserted here.</p>
+<p>The diagrams in <code>docs/book/diagrams/</code> and the manuscript are original documentation artifacts created for this edition. Their relationship to the software is descriptive; they do not expand the software license.</p>
+<hr>
+<h2>Edition scope</h2>
+<p>This book describes the implementation at Git revision <code>5e8ab125dabf1b77b82f687b88aaf194cf179e84</code>, branch <code>master</code>, as observed on 2026-10-20. The working tree contained unrelated uncommitted changes during investigation. Those changes were not treated as evidence for this edition, and the database implementation was not modified to make the book easier to write.</p>
+<p>The evidence order is:</p>
+<div class='list-item'>1. Current source code and executable tests.</div>
+<div class='list-item'>2. Current package and build configuration.</div>
+<div class='list-item'>3. Existing implementation documentation and release notes.</div>
+<div class='list-item'>4. Architecture specifications and design documents, clearly identified as intent when runtime evidence is absent.</div>
+<div class='list-item'>5. Analysis, which is labeled as analysis rather than presented as an implementation fact.</div>
+<p>The status words used throughout the book are deliberate:</p>
+<div class='list-item'>• <strong>Implemented</strong> means the behavior exists in the inspected source and has a relevant test or exercised path.</div>
+<div class='list-item'>• <strong>Implemented with limits</strong> means it exists but has explicit bounds or a narrower contract.</div>
+<div class='list-item'>• <strong>Partial</strong> means a defined stage or feature slice exists while another stage is deferred.</div>
+<div class='list-item'>• <strong>Design intent</strong> means the repository specifies the behavior but the current build does not establish it.</div>
+<div class='list-item'>• <strong>Unsupported / not certified</strong> means the project explicitly does not provide or certify the behavior.</div>
+<div class='list-item'>• <strong>Unverified</strong> means this edition makes no claim because available evidence was insufficient.</div>
+<hr>
+<h1>Contents</h1>
+<div class='list-item'>• <a href="#preface">Preface</a></div>
+<div class='list-item'>• <a href="#how-to-use-this-book">How to use this book</a></div>
+<div class='list-item'>• <a href="#implementation-status-note">Implementation-status note</a></div>
+<div class='list-item'>• <a href="#part-i--product-and-design-foundations">Part I — Product and design foundations</a></div>
+<p>- <a href="#1-what-rubixdb-is">1. What RubixDB is</a></p>
+<p>- <a href="#2-boundaries-and-architecture">2. Boundaries and architecture</a></p>
+<p>- <a href="#3-engineering-principles">3. Engineering principles</a></p>
+<div class='list-item'>• <a href="#part-ii--installation-and-first-use">Part II — Installation and first use</a></div>
+<p>- <a href="#4-workspace-build-and-artifacts">4. Workspace, build, and artifacts</a></p>
+<p>- <a href="#5-starting-an-instance">5. Starting an instance</a></p>
+<p>- <a href="#6-first-query-and-lifecycle">6. First query and lifecycle</a></p>
+<div class='list-item'>• <a href="#part-iii--sql-language-and-data-model">Part III — SQL language and data model</a></div>
+<p>- <a href="#7-relational-values-and-schema">7. Relational values and schema</a></p>
+<p>- <a href="#8-sql-surface">8. SQL surface</a></p>
+<p>- <a href="#9-parameters-constraints-and-errors">9. Parameters, constraints, and errors</a></p>
+<div class='list-item'>• <a href="#part-iv--query-processing-and-execution">Part IV — Query processing and execution</a></div>
+<p>- <a href="#10-from-request-to-result">10. From request to result</a></p>
+<p>- <a href="#11-binding-and-authorization">11. Binding and authorization</a></p>
+<p>- <a href="#12-planning-and-physical-access">12. Planning and physical access</a></p>
+<p>- <a href="#13-execution-operators">13. Execution operators</a></p>
+<div class='list-item'>• <a href="#part-v--storage-engine-and-data-structures">Part V — Storage engine and data structures</a></div>
+<p>- <a href="#14-the-durability-boundary">14. The durability boundary</a></p>
+<p>- <a href="#15-the-wal">15. The WAL</a></p>
+<p>- <a href="#16-memtables-and-sstables">16. Memtables and SSTables</a></p>
+<p>- <a href="#17-catalogs-rows-and-indexes">17. Catalogs, rows, and indexes</a></p>
+<p>- <a href="#18-recovery-and-integrity">18. Recovery and integrity</a></p>
+<div class='list-item'>• <a href="#part-vi--transactions-concurrency-and-reliability">Part VI — Transactions, concurrency, and reliability</a></div>
+<p>- <a href="#19-transaction-model">19. Transaction model</a></p>
+<p>- <a href="#20-concurrency-limits-and-conflicts">20. Concurrency limits and conflicts</a></p>
+<p>- <a href="#21-cancellation-shutdown-and-failure">21. Cancellation, shutdown, and failure</a></p>
+<div class='list-item'>• <a href="#part-vii--bulk-data-loading">Part VII — Bulk data loading</a></div>
+<p>- <a href="#22-copy-and-load-data">22. COPY and LOAD DATA</a></p>
+<p>- <a href="#23-file-safety-and-batch-semantics">23. File safety and batch semantics</a></p>
+<div class='list-item'>• <a href="#part-viii--server-cli-and-application-interfaces">Part VIII — Server, CLI, and application interfaces</a></div>
+<p>- <a href="#24-the-http-service">24. The HTTP service</a></p>
+<p>- <a href="#25-the-cli-and-product-binary">25. The CLI and product binary</a></p>
+<p>- <a href="#26-frontend-and-clients">26. Frontend and clients</a></p>
+<p>- <a href="#27-framework-integrations">27. Framework integrations</a></p>
+<div class='list-item'>• <a href="#part-ix--security-and-operational-design">Part IX — Security and operational design</a></div>
+<p>- <a href="#28-authentication-and-authorization">28. Authentication and authorization</a></p>
+<p>- <a href="#29-secrets-network-and-filesystem-boundaries">29. Secrets, network, and filesystem boundaries</a></p>
+<p>- <a href="#30-observability-without-data-leakage">30. Observability without data leakage</a></p>
+<div class='list-item'>• <a href="#part-x--performance-engineering">Part X — Performance engineering</a></div>
+<p>- <a href="#31-performance-model">31. Performance model</a></p>
+<p>- <a href="#32-measurement-discipline">32. Measurement discipline</a></p>
+<div class='list-item'>• <a href="#part-xi--testing-debugging-and-maintenance">Part XI — Testing, debugging, and maintenance</a></div>
+<p>- <a href="#33-test-architecture">33. Test architecture</a></p>
+<p>- <a href="#34-debugging-workflow">34. Debugging workflow</a></p>
+<p>- <a href="#35-release-and-compatibility">35. Release and compatibility</a></p>
+<div class='list-item'>• <a href="#part-xii--internals-and-contributor-guide">Part XII — Internals and contributor guide</a></div>
+<p>- <a href="#36-repository-tour">36. Repository tour</a></p>
+<p>- <a href="#37-making-a-change">37. Making a change</a></p>
+<div class='list-item'>• <a href="#part-xiii--roadmap-and-technical-limitations">Part XIII — Roadmap and technical limitations</a></div>
+<p>- <a href="#38-what-is-present">38. What is present</a></p>
+<p>- <a href="#39-what-is-deliberately-absent">39. What is deliberately absent</a></p>
+<div class='list-item'>• <a href="#appendices">Appendices</a></div>
+<p>- <a href="#a-sql-reference-map">A. SQL reference map</a></p>
+<p>- <a href="#b-cli-reference">B. CLI reference</a></p>
+<p>- <a href="#c-configuration-reference">C. Configuration reference</a></p>
+<p>- <a href="#d-http-route-reference">D. HTTP route reference</a></p>
+<p>- <a href="#e-error-and-limit-reference">E. Error and limit reference</a></p>
+<p>- <a href="#f-type-and-compatibility-matrix">F. Type and compatibility matrix</a></p>
+<p>- <a href="#g-source-code-map">G. Source-code map</a></p>
+<p>- <a href="#h-troubleshooting">H. Troubleshooting</a></p>
+<p>- <a href="#i-glossary-and-acronyms">I. Glossary and acronyms</a></p>
+<p>- <a href="#j-implementation-inventory">J. Implementation inventory</a></p>
+<hr>
+<h1>Preface</h1>
+<p>RubixDB is best understood by following its boundaries. A command typed into <code>rubixdb.exe</code> is not necessarily executed by an embedded SQL engine inside the command-line client. A SQL request arriving through HTTP does not bypass the relational implementation. A table row is not merely a JSON object stored behind a web route. The product is a stack: a client and host, an authenticated HTTP service, a SQL front end, relational row and index primitives, and a Rust storage engine with explicit durability and recovery boundaries.</p>
+<p>The repository also contains a large body of design history. That history is valuable, but it creates a documentation hazard: a specification can describe an intended phase while a source module intentionally implements only a slice. This book therefore makes status and evidence part of the prose. A reader should be able to move from a claim to a module, a symbol, a test family, or a named design document without relying on an invented line number.</p>
+<p>The goal is not to make RubixDB appear larger than it is. The goal is to make its actual engineering legible: what is implemented, what is bounded, what is conservative by design, and what remains outside the current product contract.</p>
+<h1>How to use this book</h1>
+<p>Start with Part I if you are evaluating the architecture. Use Part II for a local build and first query. Parts III–VII explain the database itself. Part VIII is the application-integration reference. Parts IX–XI are for operators and maintainers. Part XII is a source tour for contributors. The appendices are lookup material.</p>
+<p>The repository-relative paths in this book are stable navigation points. For example, <code>sql/src/plan/mod.rs::build_plan</code> identifies the planner entry point, while <code>api/src/routes/mod.rs::build_router</code> identifies the HTTP route assembly. The book intentionally avoids citing volatile line numbers.</p>
+<p>The companion files are:</p>
+<div class='list-item'>• <code>TECHNICAL_INVENTORY.md</code> — the evidence register used while writing.</div>
+<div class='list-item'>• <code>BOOK_SPEC.md</code> — publication structure and conventions.</div>
+<div class='list-item'>• <code>diagrams/*.mmd</code> — editable Mermaid-compatible diagrams.</div>
+<div class='list-item'>• <code>PUBLICATION_README.md</code> — build and update instructions.</div>
+<h1>Implementation-status note</h1>
+<p>This edition covers a single-node, local-first product shape. The normal product executable is <code>rubixdb.exe</code>, which can host the API in-process, manage a local instance, serve the embedded frontend when configured, and act as an HTTP SQL client. <code>rubixdb-api.exe</code> is also emitted by the workspace, but the repository records the standalone deployment shape as not certified for the current v1 product path. The book does not treat it as equivalent to the integrated product without qualification.</p>
+<p>The current server exposes bearer API-key authentication and reader/admin roles. It does not expose a complete key-management lifecycle with create, reveal, rotate, revoke, or rotation-grace routes. The frontend records those limits honestly. The book does the same.</p>
+<p>The repository contains SQL, storage, client, adapter, and frontend tests. Not every platform, package-publishing workflow, or GitHub workflow was executed during this edition. Such items are labeled unverified.</p>
+<hr>
+<h1>Part I — Product and design foundations</h1>
+<h2>1. What RubixDB is</h2>
+<p>RubixDB is a Rust database product with a local instance manager, an HTTP API, a relational SQL layer, a key-value surface, and an LSM-oriented persistent storage foundation. Its implementation is organized as a Cargo workspace:</p>
+<pre><code class='language-text'>rubixdb          core storage, catalog, relational primitives, WAL, LSM
+rubixdb-sql      parser, binder, planner, executor, SQL types and limits
+rubixdb-api      Axum HTTP service and route/auth/observability layers
+rubixdb-cli      product binary, CLI, host, GUI/static frontend integration
+rubixdb-instance instance lifecycle and filesystem/port/credential ownership</code></pre>
+<p>The root package description calls the product an embedded, multi-engine database, but the current inspected implementation should be described more precisely: the repository contains a mature LSM and relational path plus a substantial SQL/API surface, while several architecture documents describe future or phase-bound components. This book uses the code and tests to determine present behavior rather than treating every planned engine as available.</p>
+<p>The product is suited to local or single-node deployments where an application can reach an HTTP endpoint on the same machine or a deliberately configured allowed origin. The clients and framework adapters are designed for backend applications, while the React frontend supplies a browser console. The HTTP service is not a PostgreSQL wire-protocol server, and it is not documented here as a drop-in replacement for PostgreSQL or MySQL drivers.</p>
+<h3>Figure 1. Product context</h3>
+<p>Source: <a href="diagrams/01-product-context.mmd"><code>diagrams/01-product-context.mmd</code></a>.</p>
+<p>The important boundary is the HTTP service. The CLI, frontend, Python client, Node client, FastAPI adapter, Express adapter, and Django helper are clients of that service. The core engine is reached behind the API and SQL layers. This separation permits typed errors, authentication, resource limits, and observability to be enforced at one service boundary.</p>
+<h2>2. Boundaries and architecture</h2>
+<p>The dependency direction is intentional. <code>rubixdb-sql</code> depends on the core <code>rubixdb</code> crate because binding and execution need catalog, table, transaction, and storage primitives. The core does not depend on the SQL crate. This keeps the storage engine usable below the SQL layer and prevents SQL concerns from becoming a hidden dependency of the durability foundation.</p>
+<p>The API crate depends on both. It owns request authentication, route selection, HTTP error mapping, request limits, service metrics, and the translation from API principals to SQL authorization contexts. The CLI has two roles documented in <code>cli/src/main.rs</code>: client role and host role. In client role it sends SQL over HTTP; in host role it owns local instance acquisition and starts the server in process. That is why one <code>rubixdb.exe</code> can be both the interactive command and the local database host.</p>
+<p>The instance crate is the lifecycle boundary. It creates or discovers a named instance directory, acquires an operating-system lock, binds or reuses a port, persists a manifest, loads or generates credentials, and verifies an already-running process with an HTTP handshake. The source explicitly avoids trusting a PID alone. A lock with no verifiable identity is reported as locked-but-unverifiable rather than automatically broken.</p>
+<h2>3. Engineering principles</h2>
+<p>Several principles recur across the code:</p>
+<div class='list-item'>1. <strong>Make boundaries explicit.</strong> The SQL planner does not execute plans; the executor does not silently ignore unsupported plan variants; the API does not invent an independent table-authorization system.</div>
+<div class='list-item'>2. <strong>Prefer fail-closed behavior.</strong> WAL corruption stops trust at the first questionable segment. SSTable discovery treats validation failure as an error rather than silently excluding a table. Authentication rejects missing or unknown credentials.</div>
+<div class='list-item'>3. <strong>Bound resource use.</strong> Request bodies, result sizes, open SQL sessions, statement deadlines, range limits, import rows, import bytes, and observability registries are bounded.</div>
+<div class='list-item'>4. <strong>Keep sensitive values out of diagnostics.</strong> API-key debug output is redacted, security events use route patterns rather than raw paths, and observability avoids storing SQL text and credentials.</div>
+<div class='list-item'>5. <strong>Use measurement for performance decisions.</strong> The repository contains benchmarks and performance documents, but this book publishes only figures with identifiable workload and environment.</div>
+<div class='list-item'>6. <strong>Distinguish durable truth from derived read structures.</strong> In the current phase boundary, the WAL remains the durable source while SSTables provide a derived read path; an SSTable is not presented as the sole durable copy.</div>
+<hr>
+<h1>Part II — Installation and first use</h1>
+<h2>4. Workspace, build, and artifacts</h2>
+<p>The verified toolchain during this edition was:</p>
+<pre><code class='language-text'>rustc 1.98.1 (48a229cea 2026-09-01)
+cargo 1.98.1 (797e8a9bc 2026-08-05)
+Node v24.21.0
+npm 11.19.0
+Python 3.14.7</code></pre>
+<p>The workspace uses Rust edition 2021. The root <code>Cargo.toml</code> lists the workspace members <code>.</code>, <code>api</code>, <code>sql</code>, <code>cli</code>, and <code>instance</code>. The root package is version <code>0.1.0</code> and is marked <code>publish = false</code>. Client packages carry their own version and release metadata.</p>
+<p>Build the integrated release product with:</p>
+<pre><code class='language-powershell'>cargo build --release -p rubixdb-cli</code></pre>
+<p>The principal output is:</p>
+<pre><code class='language-text'>target\release\rubixdb.exe</code></pre>
+<p>The release directory also contains Cargo intermediates, dependency artifacts, debug symbols, and the separately built <code>rubixdb-api.exe</code>. Those files explain the size and density of <code>target\release</code>; they are not all deployment inputs. The integrated product path is the one to use for ordinary local operation.</p>
+<p>The API crate is also compiled because it is a workspace member and because the CLI host uses its library code. A separately emitted <code>rubixdb-api.exe</code> requires standalone configuration such as <code>RUBIXDB_DATA_DIR</code>, but the repository’s recorded product status does not certify that shape as the normal v1 deployment. Do not start both binaries for one instance.</p>
+<h2>5. Starting an instance</h2>
+<p>The CLI help in <code>cli/src/main.rs</code> is the authoritative command surface for the product binary:</p>
+<pre><code class='language-text'>rubixdb gui                 find/start the local instance and open the console
+rubixdb cli                 explicit interactive SQL client alias
+rubixdb menu                launcher behavior for a double-click
+rubixdb instance list       list known local instances
+rubixdb instance status     inspect one instance
+rubixdb status|check|backup|restore|storage|maintenance
+rubixdb                     interactive SQL client
+rubixdb -c "SQL"            execute a statement and exit
+rubixdb -f script.sql       execute a script file and exit</code></pre>
+<p>A verified release binary invocation was:</p>
+<pre><code class='language-powershell'>.\target\release\rubixdb.exe -c "SELECT 1"</code></pre>
+<p>It returned one row with value <code>1</code>. The command also exercises local instance discovery/startup when no explicit remote URL is configured.</p>
+<p>To start the interactive product:</p>
+<pre><code class='language-powershell'>.\target\release\rubixdb.exe</code></pre>
+<p>The default local API port is normally <code>302</code>, although the instance manifest may persist a different available port. Use <code>rubixdb instance list</code> rather than assuming a port after relocation or collision recovery.</p>
+<h2>6. First query and lifecycle</h2>
+<p>The first-touch lifecycle is:</p>
+<div class='list-item'>1. Resolve the instance name and directory.</div>
+<div class='list-item'>2. Attempt the operating-system lock.</div>
+<div class='list-item'>3. If the lock is owned, bind the persisted or default port, load/persist the manifest, and load/generate credentials.</div>
+<div class='list-item'>4. Open storage and perform recovery.</div>
+<div class='list-item'>5. Start the embedded Axum service and optional frontend distribution.</div>
+<div class='list-item'>6. If another process owns the lock, perform a real identity handshake and attach only when the response verifies the expected instance.</div>
+<h3>Figure 2. Startup lifecycle</h3>
+<p>Source: <a href="diagrams/02-startup-lifecycle.mmd"><code>diagrams/02-startup-lifecycle.mmd</code></a>.</p>
+<p>The CLI can connect to an explicit HTTP service through environment variables:</p>
+<pre><code class='language-powershell'>$env:RUBIXDB_API_URL = "http://127.0.0.1:302"
+$env:RUBIXDB_API_KEY = "&lt;key supplied through a secret mechanism&gt;"
+.\target\release\rubixdb.exe -c "SELECT 1"</code></pre>
+<p>The client source deliberately does not accept an API-key command-line option. That avoids shell history and process-list exposure. With an explicit URL and an interactive terminal, the CLI can prompt without echoing the key. With local auto-discovery, the instance credential is loaded from the instance directory rather than typed.</p>
+<p>Shutdown is bounded. The service stops accepting work, drains what it can within the configured budget, and closes storage and pools. The exact operator subcommands should be read from <code>rubixdb --help</code> for the current build; the book does not invent flags not present in that output.</p>
+<hr>
+<h1>Part III — SQL language and data model</h1>
+<h2>7. Relational values and schema</h2>
+<p>The relational foundation lives in <code>src/relational</code>. It provides <code>RelationalType</code>, <code>RelationalValue</code>, row representation, key encoding, <code>TableStore</code>, indexes, transaction primitives, and foreign-key support. A table row is stored through the catalog and row-storage layers; it is not a JSON document stored directly by the HTTP handler.</p>
+<p>The current type machinery includes integer families, real/double floating values, exact decimals, text, blobs, booleans, date, time, timestamp, and additional JSON/variant-related surfaces represented in <code>sql/src</code> and the phase-specific tests. Exact type behavior matters. A decimal value is not silently rescaled merely because the target column has a different scale. Client libraries therefore provide explicit parameter wrappers for values whose inferred type would otherwise be ambiguous.</p>
+<p>The catalog owns object identity and schema metadata. The SQL binder resolves table, column, index, database, and schema names against that catalog. The relational row layer uses ordinals and encoded keys; this is one reason apparently simple DDL changes such as dropping a column can have broad consequences and are recorded as a separate design problem rather than guessed into the product.</p>
+<h2>8. SQL surface</h2>
+<p>The parser and test tree show a broad, evolving surface. Verified test families include:</p>
+<div class='list-item'>• statements and expressions in <code>sql/src/parse</code>, <code>sql/src/ast</code>, and scalar/cast/datetime tests;</div>
+<div class='list-item'>• DDL and DML in phase-specific modules;</div>
+<div class='list-item'>• joins, outer joins, hash/merge access, subqueries, correlated queries, CTEs, set operations, and recursive queries;</div>
+<div class='list-item'>• aggregation, windows, grouping sets, <code>ROLLUP</code>, <code>CUBE</code>, and related functions;</div>
+<div class='list-item'>• indexes, primary-key access, foreign keys, conflict handling, and <code>RETURNING</code>;</div>
+<div class='list-item'>• temporal, regular-expression, JSON/variant, and additional scalar functions;</div>
+<div class='list-item'>• <code>COPY</code> and <code>LOAD DATA</code> in <code>sql/src/copy</code> and related tests.</div>
+<p>This list is a map to implementation evidence, not a claim that RubixDB is syntactically or behaviorally identical to PostgreSQL. The compatibility document <code>docs/SNOWFLAKE_SQL_COMPATIBILITY.md</code> covers particular compatibility work, but external dialect compatibility must be checked feature by feature.</p>
+<p>The smallest verified SQL example is:</p>
+<pre><code class='language-sql'>SELECT 1;</code></pre>
+<p>A parameterized example used by both client READMEs is:</p>
+<pre><code class='language-sql'>SELECT id, name FROM people WHERE id = $1;</code></pre>
+<p>Parameters are typed values, not interpolated text. The API request represents SQL and an optional typed <code>params</code> array. The frontend wire type is defined in <code>frontend/src/api/types.ts::SqlRequestBody</code> and <code>SqlValue</code>.</p>
+<p>The following categories should not be assumed available merely because a familiar database supports them:</p>
+<div class='table-wrap'><table><tr><th>Feature</th><th>Current treatment</th></tr><tr><td>PostgreSQL wire protocol</td><td>Unsupported / not claimed</td></tr><tr><td>MySQL wire protocol</td><td>Unsupported / not claimed</td></tr><tr><td>Django ORM over HTTP</td><td>Unsupported; use raw SQL through the Python client</td></tr><tr><td>Distributed replication/sharding</td><td>Unverified and not part of the current single-node product contract</td></tr><tr><td>Arbitrary server-side file export</td><td>Not claimed; current bulk-load feature is an import path</td></tr><tr><td>Complete API-key lifecycle</td><td>Not implemented in the current API routes</td></tr></table></div>
+<h2>9. Parameters, constraints, and errors</h2>
+<p>The binder is the main correctness boundary for identifiers, types, privileges, and statement shape. It produces a <code>BoundStatement</code>. The SQL API then carries this object into planning and execution rather than re-resolving names in a later layer.</p>
+<p>The Python client infers or accepts explicit values such as <code>Integer</code>, <code>Bigint</code>, <code>Real</code>, and <code>Decimal</code>. The Node client provides corresponding <code>param</code> helpers and preserves <code>BIGINT</code> as JavaScript <code>bigint</code> in results. These behaviors are documented in <code>clients/python/README.md</code> and <code>clients/node/README.md</code> and exercised by their type/contract tests.</p>
+<p>Important error classes include parse and binding errors, authorization failures, type/conversion errors, constraint and duplicate-key conflicts, transaction conflicts, rate/session limits, resource limits, timeouts, connection failures, storage failures, and server errors. The HTTP layer maps them to structured responses. Client libraries map them to typed exceptions rather than leaking raw <code>httpx</code> or undici exceptions.</p>
+<p>A <code>409</code> is not one universal retry signal. A lost write race is retryable only when the application can safely rerun the entire transaction. A duplicate-key or integrity conflict generally fails again if blindly repeated. The clients document and test this distinction.</p>
+<hr>
+<h1>Part IV — Query processing and execution</h1>
+<h2>10. From request to result</h2>
+<p>The SQL request path is represented by the following stages:</p>
+<pre><code class='language-text'>SQL text + typed parameters
+		|
+		v
+Parser / AST
+		|
+		v
+Binder + catalog + authorization
+		|
+		v
+BoundStatement
+		|
+		v
+Planner + validation + physical access choice
+		|
+		v
+Execution operators
+		|
+		v
+Transaction / TableStore / IndexBuilder
+		|
+		v
+Typed result, write result, DDL result, or typed error</code></pre>
+<h3>Figure 3. SQL request lifecycle</h3>
+<p>Source: <a href="diagrams/03-sql-lifecycle.mmd"><code>diagrams/03-sql-lifecycle.mmd</code></a>.</p>
+<p>The HTTP route in <code>api/src/routes/sql.rs</code> is an adapter. It parses the JSON envelope, creates or retrieves an SQL session when an explicit transaction is involved, invokes the SQL layer, and serializes a result or error. The route does not contain a second SQL parser or an independent execution engine.</p>
+<h2>11. Binding and authorization</h2>
+<p><code>sql/src/bind</code> resolves names and builds bound expressions and statements. The bound representation retains catalog identity and typed information. This is important for correctness: the planner can relocate or inspect bound objects without performing a second, potentially inconsistent name lookup.</p>
+<p>Authorization has two layers with a deliberate division of responsibility. The API authenticates a bearer key and maps it to a <code>Principal</code> with <code>reader</code> or <code>admin</code> role. <code>api/src/auth.rs::to_sql_auth_context</code> is the one explicit translation into the SQL authorization context. A SQL <code>POST</code> endpoint must accept both read and write statement kinds, so the API route cannot decide the final privilege from the HTTP method alone. The SQL binder performs statement-level authorization.</p>
+<p>This avoids a common failure mode in layered systems: one layer silently grants or denies a different set of objects than another. The API decides who is calling and the broad route role; the SQL layer decides whether the specific statement is authorized.</p>
+<h2>12. Planning and physical access</h2>
+<p><code>sql/src/plan</code> documents its own boundary: it turns a bound statement into a logical/physical plan and does not execute it. <code>Plan</code> variants cover query plans, write/DDL pass-through forms, transaction control, <code>COPY</code>, and explain structures. The code comments are explicit that not every variant is a physical execution node.</p>
+<p>For <code>SELECT</code>, the planner can build a physical plan and choose a <code>PhysicalAccess</code> decision. The same access decision is reused for the target row set of <code>UPDATE</code> and <code>DELETE</code>, reducing the risk that reads and writes silently use divergent predicate behavior. Access selection can consider primary-key/range and index structures where the current planner and executor support them.</p>
+<p>The planner validates the resulting plan before returning it. Planning metrics record successful and failed plan construction. Cost and relation-statistics modules exist, but a cost model should not be described as a universal optimizer or a guarantee of a particular index choice without a test or explain output demonstrating that choice.</p>
+<h2>13. Execution operators</h2>
+<p>The executor in <code>sql/src/exec</code> consumes plans and produces typed rows or typed errors over the real <code>TableStore</code>, <code>IndexBuilder</code>, and <code>Transaction</code> primitives. Its operator modules include access, expressions, joins, outer joins, aggregates, windows, subqueries, recursive processing, set operations, scalar functions, and write support. The exact statement support is constrained by the executor and phase tests.</p>
+<p>The row context associates a table reference with a row and carries aggregate, window, grouping-key, and grouping-mask state. This allows expressions to distinguish ordinary row values, aggregate results, window results, and grouping-set nulls. A null-extended outer-join side is represented in a way that causes missing ordinal reads to resolve as SQL <code>NULL</code>.</p>
+<p>Execution is bounded by budgets and cancellation. SQL limits are surfaced as <code>RESOURCE_LIMIT</code>-style errors rather than allowing an unbounded operation to consume the process. A statement deadline is propagated from API configuration into the executor, making the service’s timeout setting the operator-facing source of truth.</p>
+<hr>
+<h1>Part V — Storage engine and data structures</h1>
+<h2>14. The durability boundary</h2>
+<p>The storage path is intentionally layered:</p>
+<pre><code class='language-text'>logical mutation
+   -&gt; transaction/table overlay
+   -&gt; write batch coordinator
+   -&gt; WAL append and durability wait
+   -&gt; mutable memtable
+   -&gt; immutable memtable
+   -&gt; derived SSTable flush</code></pre>
+<h3>Figure 4. Storage write path</h3>
+<p>Source: <a href="diagrams/04-storage-write-path.mmd"><code>diagrams/04-storage-write-path.mmd</code></a>.</p>
+<p>The key guarantee in the current LSM comments is that a memtable mutation is applied only after the WAL durability completion says the operation is durable. SSTables add a read source derived from durable data; they are not the sole durable copy and the current phase does not allow the read structure to purge the WAL merely because an SSTable exists.</p>
+<p>This is a conservative boundary. It costs space and can leave cleanup work for later phases, but it keeps recovery authority clear. A reader should not infer from the presence of a <code>.sst</code> file that the WAL can always be deleted.</p>
+<h2>15. The WAL</h2>
+<p>The WAL implementation in <code>src/wal</code> follows a framed on-disk format. The segment header contains the <code>RBXWALv1</code> magic, version, segment ID, and reserved flags. The default segment header length is 24 bytes; a frame contains a length and CRC32C followed by a record body. The record body carries a sequence number and operation tag. PUT, DELETE, checkpoint marker, and grouped operations are represented by explicit tags in <code>src/wal/format.rs</code> and <code>src/wal/ops.rs</code>.</p>
+<p><code>FileWal</code> is intentionally single-writer. Its mutable bookkeeping is not <code>Sync</code>, and a directory-level exclusive lock prevents a second writer process from opening the same WAL. Inspectors use compatible read behavior where appropriate. This is a type-system and operating-system invariant rather than merely a comment.</p>
+<p>Recovery distinguishes a permitted torn tail from corruption and validates lengths before allocating or indexing. The current implementation deliberately amends the original design rule to stop trusting records after the first corrupted segment. This is fail-closed: a later segment is not treated as authoritative once the sequence position before it is questionable.</p>
+<p>Immediate durability waits for the append boundary. Group commit coalesces concurrent sync calls and publishes a durability watermark only after the grouped fsync succeeds. A <code>FileWal</code> configured for group commit but used without the <code>GroupCommitter</code> remains safe, although it loses batching efficiency and behaves like a stricter immediate path.</p>
+<h2>16. Memtables and SSTables</h2>
+<p>Memtables provide mutable and immutable in-memory sources. The active memtable is protected for concurrent access; immutable memtables are drained by flush work. Backpressure limits the number of pending immutable structures so a sustained write rate cannot grow memory without a bound.</p>
+<p>RUBIC SSTables are immutable sorted files. The current format includes data blocks, a bloom filter block, a sparse index block, and a fixed footer. Publication uses a temporary file and rename discipline. At startup, <code>src/sstable::discover</code> removes <code>.sst.tmp</code> files as interrupted builds, validates published tables, and fails rather than silently excluding a corrupt table. Live table discovery is based on file naming and validation in the current phase boundary, not an assumed complete manifest protocol.</p>
+<p>The read source preserves tombstones until the LSM merge can apply visibility rules across sources. A per-source reader must not collapse a tombstone too early or an older value could incorrectly reappear from another source.</p>
+<h3>Figure 5. Read path</h3>
+<p>Source: <a href="diagrams/05-read-path.mmd"><code>diagrams/05-read-path.mmd</code></a>.</p>
+<h2>17. Catalogs, rows, and indexes</h2>
+<p>The catalog provides database, schema, table, column, index, and privilege metadata. The relational row layer applies typed values to encoded keys and uses the LSM engine’s ordinary get/range primitives. <code>TableStore</code> owns row-level access while transaction overlays track changes before commit.</p>
+<p>Indexes are not a separate universe from rows. Their builders and lookup paths integrate with the relational transaction and planner layers. The planner’s access decision is reused by DML target selection where possible. Foreign-key tests and phase-specific DDL/DML tests provide evidence for the implemented constraint surface.</p>
+<p>Schema evolution is deliberately conservative. Column ordinals participate in row representation and key/index relationships, so a destructive operation such as dropping a column is not documented as available merely because a parser token could be added. The repository records that class of change as a separate architectural task.</p>
+<h2>18. Recovery and integrity</h2>
+<p>Recovery ties together WAL replay, memtable reconstruction, SSTable discovery, manifest/catalog state, and integrity checks. It is cross-cutting rather than a standalone <code>recovery</code> directory. The engine opens storage, validates on-disk structures, and replays durable operations according to the implemented recovery rules.</p>
+<p>Integrity behavior is fail-closed where ambiguity could cause silent wrong results. A malformed header, invalid CRC, impossible length, mismatched segment ID, unsupported version, or invalid SSTable footer is an error. A torn final write has a narrower recovery treatment described in the WAL specification and tests; it must not be generalized to arbitrary corruption.</p>
+<p>The repository contains extensive recovery and fault-injection documentation. This book distinguishes those certified tests from unverified environmental claims such as power-loss behavior on every filesystem and operating system.</p>
+<hr>
+<h1>Part VI — Transactions, concurrency, and reliability</h1>
+<h2>19. Transaction model</h2>
+<p>The SQL session registry exists for explicit transaction sessions. A request that executes a standalone statement can complete without holding an open SQL session. <code>BEGIN</code>, subsequent statements, and <code>COMMIT</code>/<code>ROLLBACK</code> use a session identifier carried in the HTTP SQL envelope. Session lifetime and idle time are bounded by API configuration.</p>
+<p>The relational layer exposes transaction state, read views, overlays, savepoints, row changes, and transaction metrics. A write is staged through the transaction and reaches the storage engine through a durable batch boundary. A successful commit makes the transaction’s changes visible according to the implemented snapshot/conflict model; a failed commit returns a typed conflict or constraint error.</p>
+<p>The client transaction helpers are intentionally structured around commit-before-success. In the framework adapters, a response is not treated as successful until the database transaction has committed. That prevents an application from returning HTTP 200 and only afterward discovering a lost write race.</p>
+<h2>20. Concurrency limits and conflicts</h2>
+<p>The server and clients surface a per-principal open-session limit. The published client documentation describes 50 open transactions per key as the current limit. Exceeding it is a rate/session error rather than an indefinite wait. Framework examples include a test for this behavior.</p>
+<p>The storage and transaction design uses snapshot-style conflict behavior with a first-committer-wins shape for the documented write race. A <code>RubixConflictError</code> or equivalent HTTP 409 means the complete transaction may be retried if it is safe to rerun. A duplicate key, foreign-key, check, or other integrity conflict also uses a conflict-class status in parts of the API, but rerunning the same operation is generally not correct.</p>
+<p>Concurrency is bounded in more than one place: WAL writer ownership, transaction/session count, immutable memtables, SQL statement work, result rows, request body size, rate limiting, and observability storage. These limits are part of reliability, not merely tuning knobs.</p>
+<h2>21. Cancellation, shutdown, and failure</h2>
+<p>The frontend attaches an abort signal to the SQL fetch. The API and executor have cancellation paths so a canceled request is not represented merely as a spinner disappearing from the browser while the server continues without a bound.</p>
+<p>The product shutdown path stops accepting new work, drains in-flight work for a bounded time, rolls back or closes abandoned transactions, and closes the pool/storage resources. The Node and Python clients expose graceful close methods. Express and FastAPI examples connect application shutdown to client shutdown.</p>
+<p>When a server disappears mid-query, clients classify the failure as a typed connection or timeout error and the circuit breaker can open after repeated failures. Recovery after the service returns is probed through the breaker’s half-open path. These client behaviors are tested in client chaos suites; platform-specific failure injection remains subject to the test environment.</p>
+<hr>
+<h1>Part VII — Bulk data loading</h1>
+<h2>22. COPY and LOAD DATA</h2>
+<p>Bulk loading is implemented in <code>sql/src/copy</code> and exposed through SQL statements and <code>POST /v1/copy</code> where the route and configuration permit it. The loader supports CSV and JSON readers. It resolves target columns, converts values to the target relational types, and feeds batches to an engine sink.</p>
+<p><code>COPY</code> in this product should not be assumed to mean every feature of PostgreSQL’s command. The current implementation is an import surface. The code includes format, delimiter, quote, NULL-string, header, skip-row, input-byte, row-count, row-size, batch-row, batch-byte, and duration limits. Invalid delimiter/quote combinations and invalid option values are refused.</p>
+<p>The default loader limits in <code>sql/src/copy/mod.rs</code> include a 1 GiB input bound, 50,000,000 rows, 1 MiB maximum row size, 500 rows per batch, and an 8 MiB maximum batch byte budget. These are implementation defaults, not a universal capacity guarantee; API or statement configuration can affect the effective envelope.</p>
+<h2>23. File safety and batch semantics</h2>
+<h3>Figure 7. Bulk-load pipeline</h3>
+<p>Source: <a href="diagrams/07-bulk-load.mmd"><code>diagrams/07-bulk-load.mmd</code></a>.</p>
+<p>The server-side file path is validated through the import-directory boundary. The route must not become an arbitrary filesystem read primitive. The loader reads records incrementally and holds one batch and one record rather than materializing an entire input.</p>
+<p>The transaction semantics are intentionally not “all input or nothing.” Each batch is atomic. The first failing batch stops the load; batches before that failure remain committed; the error reports the relevant class and progress. Error classes include encoding, malformed CSV/JSON, conversion, row-too-large, limit, batch/engine-limit, conflict, I/O, and cancellation.</p>
+<p>This design makes recovery and retry operationally meaningful. A caller can use the reported committed progress and skip-row mechanism where appropriate, but should not assume that blindly rerunning the entire file is idempotent.</p>
+<p>Unsupported or unverified claims include cloud object-store stages, <code>COPY TO</code>, error-skipping modes, and a general client-streaming protocol. They are omitted from the supported feature list.</p>
+<hr>
+<h1>Part VIII — Server, CLI, and application interfaces</h1>
+<h2>24. The HTTP service</h2>
+<p>The API is an Axum router assembled in <code>api/src/routes/mod.rs</code>. Route middleware records bounded metrics, applies security headers, applies CORS only from an explicit allow-list, authenticates bearer keys, and records selected security events. API responses receive <code>Cache-Control: no-store</code>; static frontend assets can remain cacheable.</p>
+<p>The public liveness route is <code>/healthz</code>. Most useful state and data routes require authentication. Readiness and identity endpoints are authenticated in the current route assembly, so an unauthenticated monitoring check should not assume that <code>/readyz</code> is public. Always consult the current route source and deployment configuration.</p>
+<p>The main route families are:</p>
+<div class='table-wrap'><table><tr><th>Family</th><th>Examples</th><th>Purpose</th></tr><tr><td>Health and identity</td><td><code>/healthz</code>, <code>/readyz</code>, <code>/v1/whoami</code></td><td>liveness, readiness, principal identity</td></tr><tr><td>Status</td><td><code>/v1/status</code>, <code>/v1/metadata</code></td><td>instance/storage metadata</td></tr><tr><td>SQL</td><td><code>POST /v1/sql</code></td><td>typed SQL request/response and sessions</td></tr><tr><td>Bulk load</td><td><code>POST /v1/copy</code></td><td>controlled import path</td></tr><tr><td>KV</td><td><code>/v1/kv</code>, <code>/v1/range</code></td><td>key-value and range access</td></tr><tr><td>Snapshots</td><td><code>/v1/snapshots</code></td><td>snapshot lifecycle</td></tr><tr><td>Catalog</td><td><code>/v1/catalog/*</code></td><td>database/schema/table/index metadata and DDL surfaces</td></tr><tr><td>Metrics</td><td><code>/v1/metrics*</code>, compaction routes</td><td>quantitative service/storage state</td></tr><tr><td>Observability</td><td><code>/v1/observability/*</code></td><td>sessions, queries, events, version</td></tr><tr><td>Admin</td><td><code>/v1/admin/*</code></td><td>operator functions such as backup/check/shutdown where configured</td></tr></table></div>
+<p>The frontend <code>ApiClient</code> mirrors these paths and wire types. It sends <code>Authorization: Bearer &lt;key&gt;</code>, serializes JSON request bodies, maps 401 into session handling, and converts non-2xx responses into <code>ApiRequestError</code> instances.</p>
+<h2>25. The CLI and product binary</h2>
+<p>The CLI is a client of the HTTP API in its client role. Its source comments explicitly reject a second embedded SQL engine in the CLI. The host role starts the server in process and can serve the frontend distribution. This arrangement gives a local user a single executable while preserving one SQL/API implementation.</p>
+<p>The command surface includes interactive SQL, <code>-c</code>, <code>-f</code>, instance listing/status, GUI/launcher behavior, and operator command families. Credentials are not accepted as command-line arguments. Explicit remote connection uses environment variables; local discovery reads instance credentials from the instance directory.</p>
+<p><code>rubixdb-api.exe</code> is a separate binary target, not a second binary that must be started alongside <code>rubixdb.exe</code>. It requires standalone configuration and is recorded as not certified for the normal product path. The integrated executable is the correct entry point for the examples and frontend.</p>
+<h2>26. Frontend and clients</h2>
+<h3>Figure 8. Integration flow</h3>
+<p>Source: <a href="diagrams/08-integration-flow.mmd"><code>diagrams/08-integration-flow.mmd</code></a>.</p>
+<p>The React frontend is a typed browser client. <code>frontend/src/api/client.ts</code> is the single fetch boundary for session-authenticated server calls. <code>frontend/src/api/types.ts</code> mirrors JSON shapes, including tagged SQL values and typed result variants. The SQL console uses <code>POST /v1/sql</code>; catalog queries use the catalog routes; operational pages use status, metrics, and observability routes.</p>
+<p>The Data Integration page has four tabs: Import files, Connect from code, API keys, and Connection status. Its import path is a frontend file parsing/load workflow; its connect tab shows runnable examples loaded from the repository examples and documents limits. The API Keys tab does not pretend that unsupported server routes exist. The status tab uses existing read-only endpoints and derived display calculations; the server currently does not provide every desired key-management or per-User-Agent metric.</p>
+<p>The Python client is installed from its package project and exposes both sync and asyncio forms:</p>
+<pre><code class='language-python'>import rubixdb
+
+db = rubixdb.Client()
+rows = db.query("SELECT id, name FROM people WHERE id = $1", [1])
+print(rows.first().name)
+
+with db.transaction() as tx:
+	tx.execute(
+		"UPDATE accounts SET balance = balance - $1 WHERE id = $2",
+		[10, 1],
+	)
+
+db.close()</code></pre>
+<p>The Node client is ESM/CJS-compatible:</p>
+<pre><code class='language-ts'>import { Client } from "@rubixdb/client";
+
+const db = new Client();
+const rows = await db.query(
+  "SELECT id, name FROM people WHERE id = $1",
+  [1],
+);
+console.log(rows.first());
+await db.close();</code></pre>
+<p>Both clients use one pooled client per process, typed parameters, transactions, bounded retry policies, circuit breaking, redacted secrets, streaming helpers, bulk inserts, health checks, and graceful shutdown. Neither is a database wire-protocol driver.</p>
+<h2>27. Framework integrations</h2>
+<p>FastAPI uses <code>rubixdb.integrations.fastapi</code>. The adapter owns an async client through the application lifespan, supplies client/transaction dependencies, maps typed errors to HTTP statuses, provides NDJSON response helpers, and exposes health/readiness patterns. The runnable application is in <code>examples/fastapi</code>; its README documents <code>pip install -r requirements.txt</code>, environment variables, and <code>uvicorn</code> startup.</p>
+<p>Express uses <code>@rubixdb/client/express</code>. <code>attach(db)</code> puts the client on the request, <code>transaction()</code> provides request transaction behavior, <code>errorHandler()</code> maps typed errors, <code>ndjson</code> streams results with pipeline support, and <code>gracefulShutdown</code> drains on process signals. The runnable example is in <code>examples/express</code>.</p>
+<p>Django uses <code>rubixdb.integrations.django</code> for raw SQL. It provides a process client, transactional view support, middleware, NDJSON, and health/readiness views. The Django ORM is not supported over this HTTP path because an HTTP SQL client does not supply the DB-API semantics, server-side cursors, savepoints, introspection, and backend contract that the ORM expects. The repository explicitly points that work to a separate wire-protocol roadmap rather than faking an ORM backend.</p>
+<hr>
+<h1>Part IX — Security and operational design</h1>
+<h2>28. Authentication and authorization</h2>
+<p>The API accepts bearer credentials in the <code>Authorization</code> header. Configuration parses entries in the form <code>name:role:key</code>, with <code>reader</code> and <code>admin</code> roles. The configuration requires at least one admin key so a deployment does not become permanently unable to perform mutating operations.</p>
+<p>The role hierarchy is simple: admin satisfies reader requirements. <code>GET</code> and <code>HEAD</code> routes generally require reader access; mutating routes require admin; <code>/v1/admin/*</code> always requires admin. SQL is a deliberate exception at the HTTP method layer because a POST body may contain a read-only SELECT or a mutation. The SQL binder then applies statement-level authorization.</p>
+<p>Authentication failures create bounded counters and security events without storing the presented secret. Authorization failures are distinct from missing/invalid authentication. This distinction is visible in API error classes and operational metrics.</p>
+<p>There is no implemented key-creation/reveal/rotate/revoke route in the current server. This means secret rotation is an operational deployment concern outside the current API route set, not a feature the frontend should imply exists.</p>
+<h2>29. Secrets, network, and filesystem boundaries</h2>
+<p>API-key debug representations use <code>&lt;redacted&gt;</code>, and configuration debug output reports only a redacted key count. Client libraries keep keys in secret wrappers and exclude them from strings, logs, errors, and traces. Security events use route templates and bounded object identifiers rather than raw URI values.</p>
+<p>The default product model is local and loopback-oriented. A separately hosted frontend requires an explicit CORS allow-list; the server does not wildcard origins. TLS-capable client configuration preserves certificate and hostname verification rather than offering an insecure disable switch. Redirects and ambient proxy configuration are deliberately constrained in the clients.</p>
+<p>Bulk-load file access is bounded by an import-directory configuration and validated paths. The API sets body limits in relation to configured key/value limits rather than relying only on a framework default. SQL, result, session, and statement limits reduce denial-of-service exposure but are not a substitute for network isolation and process-level controls.</p>
+<h2>30. Observability without data leakage</h2>
+<h3>Figure 9. Observability boundaries</h3>
+<p>Source: <a href="diagrams/09-observability-boundaries.mmd"><code>diagrams/09-observability-boundaries.mmd</code></a>.</p>
+<p>The observability module separates quantitative metrics, diagnostic state, and events. It uses bounded registries and fixed route/label sets. User SQL text, keys, filesystem paths, and arbitrary error strings are not stored as metric labels. The sampler reads counters and operating-system values without mutating database state.</p>
+<p>Endpoints include service/storage metrics, system metrics and time series, query/session registries, events, and version. Security events cover authentication failures, admin actions, catalog drops, and selected outcomes. This is an event record of what the current server actually records; it is not the audit trail for a key-management lifecycle that the server does not implement.</p>
+<p>Operational readers should treat metrics as bounded diagnostics. A missing observation, unavailable lock probe, or advisory disk forecast is not automatically equivalent to a healthy state. The source distinguishes <code>Held</code>, <code>NotHeld</code>, and <code>Unavailable</code> lock states.</p>
+<hr>
+<h1>Part X — Performance engineering</h1>
+<h2>31. Performance model</h2>
+<p>RubixDB performance is the product of several boundaries:</p>
+<div class='list-item'>• SQL parsing, binding, authorization, and planning;</div>
+<div class='list-item'>• access-path selection and row materialization;</div>
+<div class='list-item'>• transaction overlay and conflict behavior;</div>
+<div class='list-item'>• WAL append, fsync or group commit, and batching;</div>
+<div class='list-item'>• memtable and immutable-memtable pressure;</div>
+<div class='list-item'>• SSTable lookup, bloom filtering, sparse indexing, and merge work;</div>
+<div class='list-item'>• HTTP serialization, client pools, and framework overhead;</div>
+<div class='list-item'>• bulk-load conversion and batch transaction size.</div>
+<p>Theoretical complexity is not a measured result. A primary-key lookup may avoid a full scan, but the measured latency still includes the API, authentication, JSON, transaction, and storage path. A group commit can reduce fsync frequency for concurrent writers, but it introduces a batching window and must be evaluated under the target workload.</p>
+<p>The repository includes Criterion benchmarks and phase-specific performance documents. The root <code>Cargo.toml</code> identifies WAL, append, write-batch, table-store, secondary-index, and transaction benchmark targets. Some test modules also contain differential and comparison measurements. These should be rerun on the target machine before publishing new capacity claims.</p>
+<h2>32. Measurement discipline</h2>
+<p>A reproducible RubixDB benchmark record should include:</p>
+<div class='list-item'>1. Git revision and build profile.</div>
+<div class='list-item'>2. Rust, OS, CPU, memory, and storage device.</div>
+<div class='list-item'>3. Dataset size, key/value distributions, schema, indexes, and cache state.</div>
+<div class='list-item'>4. Operation mix and concurrency.</div>
+<div class='list-item'>5. Whether the measurement includes HTTP, client serialization, fsync, and recovery.</div>
+<div class='list-item'>6. Warm-up, sample count, p50/p95/p99 method, and variance.</div>
+<div class='list-item'>7. Whether compaction or flush work ran concurrently.</div>
+<div class='list-item'>8. The exact command or benchmark target.</div>
+<p>The client load tests in <code>clients/python/tests/test_load.py</code> and <code>clients/node/test/contract/load.test.ts</code> contain actual workload harnesses. Earlier project evidence measured approximately 9,000 requests/s for the Node client and approximately 910 requests/s for the Python synchronous client on one shared development machine, but those values are not product guarantees and should be treated as historical evidence tied to that run. The Python asyncio test documents an anyio-version sensitivity observed in the environment. This edition does not generalize those figures to other hardware.</p>
+<hr>
+<h1>Part XI — Testing, debugging, and maintenance</h1>
+<h2>33. Test architecture</h2>
+<p>Testing is distributed by layer:</p>
+<div class='list-item'>• Rust unit tests in core storage, WAL format/recovery, memtables, SSTables, catalog, relational types, indexes, transactions, and compaction.</div>
+<div class='list-item'>• SQL parser, binder, authorization, planner, executor, type, function, phase corpus, differential/reference-model, and query-surface tests in <code>sql/src</code> and <code>sql/tests</code>.</div>
+<div class='list-item'>• API unit and integration tests in <code>api/src</code> and <code>api/tests</code>, including route/auth/error/observability/security behavior.</div>
+<div class='list-item'>• CLI and instance lifecycle tests in <code>cli/tests</code> and related crate test modules.</div>
+<div class='list-item'>• Python client tests covering types, error mapping, release checks, contract behavior, load, chaos, and framework examples.</div>
+<div class='list-item'>• Node client Vitest unit/contract tests and ESM/CJS build/type checks.</div>
+<div class='list-item'>• Frontend Vitest tests, Playwright design/accessibility/integration suites, and generated-snippet checks.</div>
+<p>Feature-gated tests are a key status signal. Fault-point and simulated-filesystem tests are not part of every product build. A test under a feature gate should not be described as a default production behavior without checking how the feature is enabled.</p>
+<h2>34. Debugging workflow</h2>
+<p>A disciplined investigation follows the same boundaries as the product:</p>
+<div class='list-item'>1. Reproduce with a minimal SQL or HTTP request.</div>
+<div class='list-item'>2. Record the Git revision, build profile, environment, instance name, and data directory.</div>
+<div class='list-item'>3. Determine whether the failure is client, HTTP/auth, SQL parse/bind/plan/execute, transaction, catalog, or storage.</div>
+<div class='list-item'>4. Use request IDs, typed error codes, query/session observability, and safe logs without exposing keys or SQL parameters.</div>
+<div class='list-item'>5. Inspect storage with read-only tools where available; do not treat a recovery command as read-only without verifying its implementation.</div>
+<div class='list-item'>6. Add a regression test at the narrowest layer that reproduces the defect.</div>
+<div class='list-item'>7. Run the relevant suite plus the full workspace gate before changing the status record.</div>
+<p>A 401 indicates missing/invalid bearer credentials or a wrong instance key. A 403 indicates an authenticated principal lacks the required role. A 409 must be classified as write conflict versus integrity conflict. A 429 may represent rate limiting or the open-session limit. A connection refusal may mean the instance is not running, the port in the manifest changed, or a client is pointed at the wrong URL.</p>
+<h2>35. Release and compatibility</h2>
+<p>The Rust workspace uses version <code>0.1.0</code> in the inspected manifests. The Python client declares Python &gt;=3.9 and uses <code>httpx</code>; the Node client declares Node &gt;=20.18.1 and uses undici 7. The package READMEs define compatibility against the <code>POST /v1/sql</code> API of the 2026-10 builds, including typed parameters and <code>session_id</code> transactions.</p>
+<p>Client version gates compare package versions and changelog entries. The repository contains GitHub workflows for backend clients and tag-driven releases, but this edition does not claim that those workflows have run successfully on GitHub. Package names, publisher accounts, trusted publishing, and release secrets must be independently configured.</p>
+<p>No external wire-protocol compatibility is claimed. A client package is an HTTP client with typed SQL parameters and result conversion, not a PostgreSQL driver.</p>
+<hr>
+<h1>Part XII — Internals and contributor guide</h1>
+<h2>36. Repository tour</h2>
+<p>The root <code>src</code> tree contains the storage and relational foundations:</p>
+<div class='list-item'>• <code>catalog</code> — metadata and catalog service.</div>
+<div class='list-item'>• <code>compaction</code> — compaction structures and operations.</div>
+<div class='list-item'>• <code>error</code> — shared engine errors.</div>
+<div class='list-item'>• <code>execution</code> — write/batch coordination.</div>
+<div class='list-item'>• <code>lsm</code> — integrated storage facade.</div>
+<div class='list-item'>• <code>manifest</code> — persistent metadata edits/state.</div>
+<div class='list-item'>• <code>memtable</code> — mutable/immutable in-memory records.</div>
+<div class='list-item'>• <code>ops</code> — operator and catalog-facing operations.</div>
+<div class='list-item'>• <code>persist</code> — filesystem abstraction and simulation boundary.</div>
+<div class='list-item'>• <code>relational</code> — typed rows, table store, indexes, transactions, foreign keys.</div>
+<div class='list-item'>• <code>sstable</code> — immutable sorted table format, readers, writers, bloom/index support.</div>
+<div class='list-item'>• <code>wal</code> — durable append log, format, recovery, group commit, metrics.</div>
+<p>The <code>sql</code> tree is intentionally explicit: <code>parse</code>, <code>ast</code>, <code>bind</code>, <code>bound</code>, <code>auth</code>, <code>plan</code>, <code>exec</code>, <code>functions</code>, <code>cast</code>, <code>datetime</code>, <code>json</code>, <code>regexp</code>, <code>temporal</code>, <code>variant</code>, <code>copy</code>, <code>limits</code>, and metrics. The test modules in <code>sql/src/lib.rs</code> provide a useful map of the implemented query surface.</p>
+<p>The <code>api</code> tree contains configuration, auth, error mapping, state, server, SQL sessions, SQL parameters, route families, observability, security logging, and operational services. The <code>cli</code> tree contains client protocol code, host startup, instance commands, GUI/embedded frontend, operator commands, rendering, REPL, scripts, and startup environment handling. The <code>instance</code> tree owns paths, credentials, locks, manifest, port, handshake, browser, storage, volume, and relocation.</p>
+<h2>37. Making a change</h2>
+<p>A contributor should first identify the contract layer. A new SQL expression belongs in parser/AST/binder/type checking, planner/executor behavior, and corpus tests; it should not be added only to a route handler. A new route belongs in <code>api/src/routes</code>, route/auth/error/observability tests, client API types where applicable, and documentation. A storage change must account for WAL durability, recovery, file formats, and crash/error tests.</p>
+<p>The repository’s source comments and architecture documents use named decisions and phase records. Preserve that traceability. Avoid adding a placeholder module for a future engine: the architecture history explicitly rejects empty directories that imply an implementation exists.</p>
+<p>A safe contributor sequence is:</p>
+<pre><code class='language-powershell'>cargo fmt --all -- --check
+cargo check --workspace --all-targets
+cargo test --workspace --no-fail-fast
+cargo clippy --workspace --all-targets -- -D warnings</code></pre>
+<p>Run the relevant client/frontend checks as well. The exact full gate may require a built release binary, Python optional dependencies, browser installations, or an isolated database directory. If an environment prevents a check, record it; do not convert a failure into a skip by deleting or ignoring the test.</p>
+<hr>
+<h1>Part XIII — Roadmap and technical limitations</h1>
+<h2>38. What is present</h2>
+<p>At the covered revision, the repository provides a serious single-node stack: durable WAL operations, memtable/SSTable storage paths, catalog and relational rows, typed SQL parsing/binding/planning/execution, transactions and indexes, a protected HTTP API, local instance lifecycle, frontend console, Python and Node clients, framework helpers, bulk loading, observability, and extensive tests.</p>
+<p>The implementation is broad, but breadth is not the same as unlimited compatibility. Each layer has explicit limits and phase boundaries. Those limits are part of the product’s technical identity.</p>
+<h2>39. What is deliberately absent</h2>
+<p>The following are outside the verified current contract:</p>
+<div class='list-item'>• PostgreSQL or MySQL wire protocols.</div>
+<div class='list-item'>• Distributed replication, consensus, sharding, or multi-node failover.</div>
+<div class='list-item'>• A Django DB-API 2.0 backend capable of making the Django ORM operate over HTTP.</div>
+<div class='list-item'>• A complete API-key management lifecycle with reveal, rotate, revoke, multiple key IDs, and grace windows.</div>
+<div class='list-item'>• A promise that standalone <code>rubixdb-api.exe</code> is the certified deployment artifact.</div>
+<div class='list-item'>• A claim that every architecture document has reached runtime implementation.</div>
+<div class='list-item'>• Universal cross-platform durability certification, cloud staging, or an unbounded analytical workload guarantee.</div>
+<p>Possible future work can be inferred from architecture documents and <code>OPEN_ITEMS.md</code>, but this edition does not convert those records into delivery promises or dates. The correct engineering action for a missing feature is a new scoped design, implementation, test, and release decision.</p>
+<hr>
+<h1>Appendices</h1>
+<h2>A. SQL reference map</h2>
+<p>Use these paths as the authoritative navigation map:</p>
+<div class='table-wrap'><table><tr><th>Concern</th><th>Source</th></tr><tr><td>Parser and AST</td><td><code>sql/src/parse</code>, <code>sql/src/ast</code></td></tr><tr><td>Binding and name resolution</td><td><code>sql/src/bind</code>, <code>sql/src/bound</code></td></tr><tr><td>Authorization</td><td><code>sql/src/auth.rs</code>, <code>api/src/auth.rs</code></td></tr><tr><td>Planner</td><td><code>sql/src/plan</code></td></tr><tr><td>Executor</td><td><code>sql/src/exec</code></td></tr><tr><td>Types and casts</td><td><code>sql/src/cast.rs</code>, <code>sql/src/temporal.rs</code>, <code>sql/src/variant.rs</code>, <code>src/relational/value.rs</code></td></tr><tr><td>Aggregates/windows</td><td><code>sql/src/aggregate.rs</code>, <code>sql/src/exec</code>, aggregate/window test modules</td></tr><tr><td>DDL/DML/constraints</td><td>phase-specific tests in <code>sql/src</code> and <code>src/relational</code></td></tr><tr><td>COPY/LOAD DATA</td><td><code>sql/src/copy</code>, <code>docs/BULK_LOAD_DESIGN.md</code></td></tr><tr><td>API envelope</td><td><code>api/src/routes/sql.rs</code>, <code>api/src/sql_params.rs</code>, <code>frontend/src/api/types.ts</code></td></tr></table></div>
+<p>Examples should be tested with the current build. The safest first query is <code>SELECT 1</code>. For application values, use <code>$1</code>, <code>$2</code>, and typed client parameters.</p>
+<h2>B. CLI reference</h2>
+<pre><code class='language-text'>rubixdb --help
+rubixdb --version
+rubixdb
+rubixdb -c "SELECT 1"
+rubixdb -f script.sql
+rubixdb gui
+rubixdb cli
+rubixdb menu
+rubixdb instance list
+rubixdb instance status
+rubixdb status
+rubixdb check
+rubixdb backup --help
+rubixdb restore --help
+rubixdb storage --help
+rubixdb maintenance --help</code></pre>
+<p>The operator command families above are present in the CLI help or source dispatch, but subcommand options should be read from the executable’s current <code>--help</code> output before use. Credentials must not be passed as command-line arguments.</p>
+<h2>C. Configuration reference</h2>
+<p>Core API variables are parsed in <code>api/src/config.rs</code> and related startup modules. Important names include:</p>
+<div class='table-wrap'><table><tr><th>Variable</th><th>Meaning</th></tr><tr><td><code>RUBIXDB_API_KEYS</code></td><td>Named API-key configuration: <code>name:role:key,...</code></td></tr><tr><td><code>RUBIXDB_DATA_DIR</code></td><td>Standalone API data directory configuration</td></tr><tr><td><code>RUBIXDB_API_URL</code></td><td>Explicit client/CLI HTTP endpoint</td></tr><tr><td><code>RUBIXDB_API_KEY</code></td><td>Explicit client/CLI bearer key</td></tr><tr><td><code>RUBIXDB_INSTANCE_NAME</code></td><td>Local instance discovery name</td></tr><tr><td><code>RUBIXDB_CORS_ALLOWED_ORIGINS</code></td><td>Explicit comma-separated browser origins</td></tr><tr><td><code>RUBIXDB_IMPORT_DIR</code></td><td>Server-side import boundary where configured</td></tr><tr><td><code>RUBIXDB_BACKUP_DIR</code></td><td>Operator backup directory where configured</td></tr></table></div>
+<p>Additional variables exist for rate limits, session limits, statement deadlines, compaction, storage pressure, probes, and test/fault injection. Consult <code>api/src/config.rs</code>, <code>cli/src/startup_env.rs</code>, the instance modules, and the relevant architecture document before using one. This appendix intentionally does not invent defaults for variables not established by those sources.</p>
+<h2>D. HTTP route reference</h2>
+<p>The primary route table is assembled by <code>api/src/routes/mod.rs</code>. The principal families are:</p>
+<pre><code class='language-text'>GET    /healthz
+GET    /readyz
+GET    /v1/whoami
+GET    /v1/status
+GET    /v1/metadata
+POST   /v1/sql
+POST   /v1/copy
+GET/PUT/DELETE /v1/kv...
+GET    /v1/range
+GET/POST/DELETE /v1/snapshots...
+GET    /v1/catalog/*
+GET    /v1/metrics*
+GET    /v1/compaction/status
+GET    /v1/compaction/metrics
+GET    /v1/observability/sessions
+GET    /v1/observability/queries
+GET    /v1/observability/events
+GET    /v1/observability/version
+/v1/admin/*</code></pre>
+<p>The exact method/path combinations, role requirements, and response schemas are source-controlled. Use <code>api/src/routes/mod.rs</code>, each route module, and <code>frontend/src/api/types.ts</code> together; do not infer an endpoint from a frontend label alone.</p>
+<h2>E. Error and limit reference</h2>
+<div class='table-wrap'><table><tr><th>Class</th><th>Typical meaning</th><th>Client treatment</th></tr><tr><td>401</td><td>Missing or invalid bearer key</td><td>Reauthenticate; do not retry blindly</td></tr><tr><td>403</td><td>Principal lacks required role</td><td>Change authorization/configuration</td></tr><tr><td>409</td><td>Write conflict or integrity conflict</td><td>Retry only a safe whole transaction; do not repeat integrity failures blindly</td></tr><tr><td>429</td><td>Rate/session/resource rejection</td><td>Honor retry metadata when present; session-cap errors require closing/committing transactions</td></tr><tr><td>5xx</td><td>Server/internal failure</td><td>Typed server error; breaker may count it</td></tr><tr><td>timeout</td><td>Connect/read/pool/server deadline</td><td>Typed timeout with phase</td></tr><tr><td>resource limit</td><td>Result, statement, body, row, or load bound</td><td>Reduce workload or configure within supported bounds</td></tr></table></div>
+<p>The client-specific exception names are listed in <code>clients/python/README.md</code> and <code>clients/node/README.md</code>; they should be treated as public package interfaces only at the package versions that define them.</p>
+<h2>F. Type and compatibility matrix</h2>
+<div class='table-wrap'><table><tr><th>Interface</th><th>Current contract</th><th>Not claimed</th></tr><tr><td>Rust core</td><td>Workspace crate, edition 2021, version 0.1.0</td><td>Stable external Rust API policy</td></tr><tr><td>HTTP API</td><td>Bearer-authenticated JSON API, SQL at <code>/v1/sql</code></td><td>PostgreSQL/MySQL wire protocol</td></tr><tr><td>Python</td><td>Python &gt;=3.9, <code>httpx</code>, sync/async clients</td><td>ORM backend, distributed transport</td></tr><tr><td>Node</td><td>Node &gt;=20.18.1, ESM/CJS, undici</td><td>Node 18 support for undici 7</td></tr><tr><td>FastAPI</td><td>Optional integration package and runnable example</td><td>Production hosting configuration for every platform</td></tr><tr><td>Express</td><td>Optional integration and example</td><td>Automatic deployment topology</td></tr><tr><td>Django</td><td>Raw SQL helper over HTTP</td><td>Django ORM over HTTP</td></tr><tr><td>Frontend</td><td>React/Vite console and embedded/static serving path</td><td>Key-management routes absent from server</td></tr></table></div>
+<h2>G. Source-code map</h2>
+<pre><code class='language-text'>src/lib.rs                         core public modules
+src/wal/                            WAL format, I/O, recovery, group commit
+src/memtable/                       mutable/immutable memory sources
+src/sstable/                        RUBIC immutable sorted tables
+src/manifest/                       persistent metadata state
+src/lsm/                            integrated storage facade and recovery
+src/catalog/                        catalog service and metadata
+src/relational/                     rows, types, transactions, indexes
+src/ops/                            operational/catalog helpers
+sql/src/lib.rs                      SQL crate boundary
+sql/src/parse, ast, bind, bound     SQL front end
+sql/src/plan                        planning and validation
+sql/src/exec                        physical execution
+sql/src/copy                        bulk loading
+api/src/routes                      HTTP route assembly and handlers
+api/src/auth.rs                     bearer auth and API-to-SQL role mapping
+api/src/config.rs                   environment configuration
+api/src/observability               metrics, diagnostics, events
+cli/src/main.rs                     product CLI and help surface
+cli/src/host.rs                     embedded service host
+instance/src/lib.rs                 instance acquisition and lifecycle
+frontend/src/api                    typed browser HTTP client
+frontend/src/integration            Data Integration UI
+clients/python/rubixdb              Python clients and integrations
+clients/node/src                    Node client and Express adapter
+examples/                           runnable framework/application examples</code></pre>
+<h2>H. Troubleshooting</h2>
+<p><strong>The frontend displays 401.</strong> Confirm the session URL points to the active instance and the key belongs to that instance. Each instance has its own credentials. Ensure the <code>Authorization: Bearer</code> header is present.</p>
+<p><strong>The API responds 403.</strong> The key authenticated but lacks the role required by the route or SQL statement. Use an admin key for writes/admin routes and a reader key for read-only work.</p>
+<p><strong>The API responds 409.</strong> Determine whether the error is a lost write conflict or integrity failure. Retry the complete transaction only for a safe conflict; do not repeat a duplicate-key operation as a generic retry.</p>
+<p><strong>The API responds 429.</strong> It may be rate limiting or the per-principal transaction/session cap. Close abandoned transactions and honor <code>Retry-After</code> when supplied.</p>
+<p><strong>Connection refused.</strong> Run <code>rubixdb instance list</code>, confirm the persisted port, start <code>target/release/rubixdb.exe</code>, and verify that <code>RUBIXDB_API_URL</code> is not pointing to a stale port.</p>
+<p><strong>The standalone API binary exits with a configuration error.</strong> <code>rubixdb-api.exe</code> requires standalone variables such as <code>RUBIXDB_DATA_DIR</code>; use the integrated <code>rubixdb.exe</code> product path unless the standalone deployment is specifically being developed.</p>
+<p><strong>A bulk load stops after some rows.</strong> The loader commits successful batches before the first failing batch. Inspect the error class and reported progress; do not assume a global rollback.</p>
+<p><strong>A query is slow.</strong> Separate server execution time from client/HTTP time, inspect plan/access evidence, check row/result limits and storage state, and measure on the target machine. Do not infer a hardware ceiling from a single development run.</p>
+<h2>I. Glossary and acronyms</h2>
+<div class='list-item'>• <strong>API</strong> — application programming interface.</div>
+<div class='list-item'>• <strong>AST</strong> — abstract syntax tree.</div>
+<div class='list-item'>• <strong>CORS</strong> — Cross-Origin Resource Sharing.</div>
+<div class='list-item'>• <strong>CRC32C</strong> — Castagnoli CRC used for frame integrity.</div>
+<div class='list-item'>• <strong>DDL</strong> — data definition language.</div>
+<div class='list-item'>• <strong>DML</strong> — data manipulation language.</div>
+<div class='list-item'>• <strong>LSM</strong> — log-structured merge.</div>
+<div class='list-item'>• <strong>MVCC/snapshot view</strong> — a transaction read view over a consistent version boundary; use the project’s documented transaction terminology rather than assuming full PostgreSQL MVCC semantics.</div>
+<div class='list-item'>• <strong>SSTable</strong> — immutable sorted string/table file, here the RUBIC on-disk format.</div>
+<div class='list-item'>• <strong>WAL</strong> — write-ahead log.</div>
+<div class='list-item'>• <strong>Tombstone</strong> — a durable deletion marker that hides older values during source merge.</div>
+<div class='list-item'>• <strong>Principal</strong> — authenticated API identity with a role.</div>
+<div class='list-item'>• <strong>PhysicalAccess</strong> — planner’s selected access decision for a row source.</div>
+<div class='list-item'>• <strong>Session</strong> — server-side SQL transaction state referenced by <code>session_id</code>.</div>
+<h2>J. Implementation inventory</h2>
+<p>The full evidence register is maintained in <a href="TECHNICAL_INVENTORY.md"><code>TECHNICAL_INVENTORY.md</code></a>. It records implemented, partial, design-intent, unsupported, and unverified areas and should be updated before future editions. The book is authoritative only for the covered revision and date; changes to the source require a new review.</p>
+<hr>
+<h2>Closing note</h2>
+<p>RubixDB’s most important engineering fact is not a single feature. It is the shape of its boundaries: a durable storage foundation, a relational layer that owns binding and authorization decisions, a service layer that exposes typed and bounded operations, and clients that preserve those contracts without pretending to be a wire-protocol database. The repository’s design history is extensive because these boundaries have been negotiated and tested over time. A responsible technical reference must show both the implementation and the edges where implementation stops.</p>
+</main></body></html>

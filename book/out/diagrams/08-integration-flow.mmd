@@ -1,0 +1,10 @@
+flowchart LR
+  Browser[React console] --> Fetch[Typed ApiClient fetch]
+  Python[Python client] --> Fetch
+  Node[Node client] --> Fetch
+  FastAPI[FastAPI adapter] --> Python
+  Django[Django raw-SQL helper] --> Python
+  Express[Express adapter] --> Node
+  Fetch --> HTTP[Bearer HTTP API]
+  HTTP --> Server[rubixdb.exe embedded host]
+  Server --> SQL[SQL and storage layers]

@@ -1,0 +1,3 @@
+# RUBIXDB Premium Book — Publication Notes
+
+The package contains the editable Markdown manuscript and designed PDF/HTML editions. The PDF uses a restrained editorial style, paginated layout, running headers/footers, contents, formatted code/table blocks, and schematic vector diagrams based on the manuscript's figure descriptions. These diagrams are explanatory, not evidence of additional functionality. The source revision and licensing caveats from the manuscript are preserved. A full source-repository test run and independent page-by-page visual review were not performed in this build environment.

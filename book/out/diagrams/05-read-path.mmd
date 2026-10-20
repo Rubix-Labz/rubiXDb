@@ -1,0 +1,9 @@
+flowchart LR
+  Query[Bound SELECT] --> Access[PhysicalAccess decision]
+  Access --> Index{Usable index?}
+  Index -->|yes| IndexScan[Index lookup / range access]
+  Index -->|no| Scan[Table or source scan]
+  IndexScan --> Operators[Joins, filters, aggregates, windows, projection]
+  Scan --> Operators
+  Operators --> Merge[Merge visible versions and tombstones]
+  Merge --> Rows[Typed result rows]

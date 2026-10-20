@@ -1,0 +1,10 @@
+flowchart TD
+  Request[HTTP request] --> Bearer[Bearer API key]
+  Bearer --> Principal[reader or admin Principal]
+  Principal --> RouteRole[HTTP route role check]
+  RouteRole --> SQLRole[SQL AuthContext for SQL statements]
+  SQLRole --> Txn[Snapshot transaction]
+  Txn --> Commit[Commit / conflict detection]
+  Commit --> Response[HTTP result or typed error]
+  Request --> Limits[Rate, body, session, row, statement limits]
+  Request --> Obs[Request IDs, metrics, bounded events]

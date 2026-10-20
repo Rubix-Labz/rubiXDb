@@ -1,0 +1,15 @@
+flowchart LR
+  User[Engineer or application] --> CLI[rubixdb.exe CLI / GUI]
+  User --> Web[Browser console]
+  App[FastAPI / Express / Django / Python / Node] --> HTTP[HTTP API]
+  CLI --> HTTP
+  Web --> HTTP
+  HTTP --> API[Axum rubixdb-api route layer]
+  API --> SQL[rubixdb-sql]
+  API --> KV[KV / range / snapshot routes]
+  SQL --> Core[rubixdb core]
+  KV --> Core
+  Core --> WAL[WAL]
+  Core --> Mem[Memtables]
+  Core --> SST[SSTables]
+  Core --> Catalog[Catalog and relational store]

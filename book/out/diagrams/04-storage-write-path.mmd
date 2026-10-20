@@ -1,0 +1,12 @@
+flowchart TD
+  Mutation[Row mutation] --> Tx[Transaction overlay]
+  Tx --> Batch[write_batch / batch coordinator]
+  Batch --> WAL[Frame WAL operation]
+  WAL --> Sync[Immediate or group-commit durability boundary]
+  Sync --> Mem[Apply to mutable memtable]
+  Mem --> Immutable[Immutable memtable queue]
+  Immutable --> Flush[Background flush]
+  Flush --> Tmp[Write SSTable temporary file]
+  Tmp --> Validate[Validate and atomically publish]
+  Validate --> SST[SSTable read source]
+  WAL --> Recover[Recovery source remains authoritative]

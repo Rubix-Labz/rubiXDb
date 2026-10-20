@@ -1,0 +1,10 @@
+flowchart LR
+  COPY[POST /v1/copy or COPY/LOAD DATA SQL] --> Validate[File path/options/limits validation]
+  Validate --> Reader[CSV or JSON streaming reader]
+  Reader --> Convert[Column resolution and typed conversion]
+  Convert --> Batch[Bounded batch]
+  Batch --> Commit[One transaction per batch]
+  Commit -->|success| Next{More records?}
+  Commit -->|first error| Stop[Stop; report error class and committed rows]
+  Next -->|yes| Batch
+  Next -->|no| Done[Load complete]

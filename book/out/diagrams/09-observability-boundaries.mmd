@@ -1,0 +1,11 @@
+flowchart TD
+  Request[Request] --> Headers[Security headers and no-store API response]
+  Request --> Metrics[Route/service metrics]
+  Request --> AuthEvents[Auth and admin security events]
+  Request --> QueryReg[Bounded query/session registries]
+  Sampler[Background sampler] --> System[System/storage metrics]
+  Disk[Disk watch] --> System
+  Metrics --> Endpoints[/v1/metrics and system metrics]
+  AuthEvents --> Endpoints2[/v1/observability/events]
+  QueryReg --> Endpoints3[/v1/observability/queries and sessions]
+  System --> Endpoints

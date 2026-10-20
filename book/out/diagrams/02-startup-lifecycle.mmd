@@ -1,0 +1,13 @@
+flowchart TD
+  Start[rubixdb cli or gui] --> Resolve[Resolve instance name and path]
+  Resolve --> Lock{Acquire OS instance lock}
+  Lock -->|owned| Bind[Bind persisted or default API port]
+  Lock -->|already held| Handshake[HTTP identity handshake]
+  Handshake -->|verified| Attach[Attach to running instance]
+  Handshake -->|unverifiable| Stop[Report locked-but-unverifiable]
+  Bind --> Manifest[Load or persist manifest]
+  Manifest --> Credentials[Load or generate credentials]
+  Credentials --> Host[Start embedded API host]
+  Host --> Recover[Open storage and recover WAL/SSTables]
+  Recover --> Ready[Serve authenticated API and optional frontend]
+  Attach --> Ready

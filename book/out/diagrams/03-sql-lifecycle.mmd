@@ -1,0 +1,12 @@
+flowchart LR
+  Client[CLI / frontend / Python / Node] --> Request[POST /v1/sql]
+  Request --> Auth[Bearer auth and principal]
+  Auth --> Parse[Parser and AST]
+  Parse --> Bind[Binder, catalog resolution, type checks, SQL authorization]
+  Bind --> Bound[BoundStatement]
+  Bound --> Plan[Logical/physical plan and validation]
+  Plan --> Exec[Execution operators]
+  Exec --> Tx[Transaction / TableStore / IndexBuilder]
+  Tx --> Storage[LSM storage path]
+  Exec --> Result[Typed rows, write, DDL, or error]
+  Result --> Client
