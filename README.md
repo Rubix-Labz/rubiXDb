@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/rubixdb-logo.png" alt="RubixDB logo" width="720"/>
+<img src="rubixdb logo.png" alt="RubixDB logo" width="720"/>
 
 # RubixDB
 
